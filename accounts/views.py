@@ -5,11 +5,13 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from accounts.serializers import (
+    UserChangePasswordSerializer,
     UserProfileSerializer,
     UserLoginSerializer,
     UserRegistrationSerializer,
 )
 from accounts.renderers import UserRenderer
+from core import serializers
 
 
 # Generate Tocken Manually
@@ -79,7 +81,23 @@ class UserProfileView(APIView):
 
 class UserChangePasswordView(APIView):
     renderer_classes = [UserRenderer]
+
     permission_classes = [IsAuthenticated]
 
     def post(self, request, format=None):
-        pass
+        serializer = UserChangePasswordSerializer(
+            data=request.data,
+            context={
+                "user": request.user,
+            },
+        )
+        if serializer.is_valid(raise_exception=True):
+            return Response(
+                {"msg": "Password Change Successful."},
+                status=status.HTTP_200_OK,
+            )
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST,
+        )
